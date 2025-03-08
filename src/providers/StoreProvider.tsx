@@ -8,7 +8,7 @@ import { useStore } from "zustand";
 export type MediaStoreApi = ReturnType<typeof createMediaStore>;
 
 export const MediaStoreContext = createContext<MediaStoreApi | undefined>(
-  undefined
+  undefined,
 );
 
 export interface MediaStoreProviderProps {

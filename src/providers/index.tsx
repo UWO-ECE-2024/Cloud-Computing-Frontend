@@ -1,11 +1,18 @@
 "use client";
-import QueriesProvider from "./QueriesProvider";
 import { MediaStoreProvider } from "./StoreProvider";
+import { ThemeProvider } from "./ThemeProvider";
 
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <MediaStoreProvider>
-      <QueriesProvider>{children}</QueriesProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
     </MediaStoreProvider>
   );
 };

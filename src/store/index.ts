@@ -20,8 +20,8 @@ export const createMediaStore = (initState: MediaState = InitState) => {
         partialize: (state) => {
           return { config: state.config, flag: state.flag };
         },
-      }
-    )
+      },
+    ),
   );
 };
 
