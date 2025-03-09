@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostCard, type Post } from "@/components/postCard";
 import { Navbar } from "@/components/navbar";
+import { EditProfileDialog } from "@/components/editProfileDialog";
 
 // Sample data
-const userProfile = {
+const initialUserProfile = {
   id: "current-user",
   name: "Jim Luo",
   username: "jimluo_",
@@ -30,9 +31,9 @@ const userPosts: Post[] = [
     id: "1",
     user: {
       id: "current-user",
-      name: userProfile.name,
-      username: userProfile.username,
-      avatar: userProfile.avatar,
+      name: initialUserProfile.name,
+      username: initialUserProfile.username,
+      avatar: initialUserProfile.avatar,
     },
     content:
       "Just launched my new portfolio website! Check it out and let me know what you think 🚀",
@@ -45,9 +46,9 @@ const userPosts: Post[] = [
     id: "2",
     user: {
       id: "current-user",
-      name: userProfile.name,
-      username: userProfile.username,
-      avatar: userProfile.avatar,
+      name: initialUserProfile.name,
+      username: initialUserProfile.username,
+      avatar: initialUserProfile.avatar,
     },
     content:
       "Working on a new design system for our product. Here's a sneak peek of the color palette we're considering.",
@@ -60,9 +61,9 @@ const userPosts: Post[] = [
     id: "3",
     user: {
       id: "current-user",
-      name: userProfile.name,
-      username: userProfile.username,
-      avatar: userProfile.avatar,
+      name: initialUserProfile.name,
+      username: initialUserProfile.username,
+      avatar: initialUserProfile.avatar,
     },
     content:
       "Just finished reading 'Atomic Habits' by James Clear. Highly recommend it if you're looking to build better habits and break bad ones!",
@@ -73,8 +74,10 @@ const userPosts: Post[] = [
 ];
 
 export default function ProfilePage() {
+  const [userProfile, setUserProfile] = useState(initialUserProfile);
   const [posts, setPosts] = useState<Post[]>(userPosts);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   const handleLike = (id: string) => {
     setPosts(
@@ -92,6 +95,36 @@ export default function ProfilePage() {
 
   const handleDelete = (id: string) => {
     setPosts(posts.filter((post) => post.id !== id));
+  };
+
+  const handleProfileUpdate = (updatedProfile: any) => {
+    // Update the user profile
+    const newProfile = {
+      ...userProfile,
+      ...updatedProfile,
+      // If we have new files, create object URLs for them
+      avatar: updatedProfile.avatar
+        ? URL.createObjectURL(updatedProfile.avatar)
+        : userProfile.avatar,
+      banner: updatedProfile.banner
+        ? URL.createObjectURL(updatedProfile.banner)
+        : userProfile.banner,
+    };
+
+    setUserProfile(newProfile);
+
+    // Update the user info in all posts
+    setPosts(
+      posts.map((post) => ({
+        ...post,
+        user: {
+          ...post.user,
+          name: newProfile.name,
+          username: newProfile.username,
+          avatar: newProfile.avatar,
+        },
+      })),
+    );
   };
 
   return (
@@ -139,7 +172,12 @@ export default function ProfilePage() {
                 >
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <Button variant="outline" size="icon" className="ml-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="ml-2"
+                  onClick={() => setIsEditProfileOpen(true)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
@@ -250,6 +288,13 @@ export default function ProfilePage() {
               </TabsContent>
             </Tabs>
           </div>
+
+          <EditProfileDialog
+            open={isEditProfileOpen}
+            onOpenChange={setIsEditProfileOpen}
+            profile={userProfile}
+            onSave={handleProfileUpdate}
+          />
         </motion.div>
       </main>
     </>
