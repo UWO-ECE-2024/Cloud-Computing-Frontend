@@ -1,19 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import Image from "next/image"
-import { Camera, Loader2, X } from "lucide-react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { useState, useRef } from "react";
+import Image from "next/image";
+import { Camera, Loader2, X } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const profileFormSchema = z.object({
   name: z
@@ -53,34 +67,41 @@ const profileFormSchema = z.object({
       message: "Website must not be longer than 100 characters.",
     })
     .optional(),
-})
+});
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 interface EditProfileDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   profile: {
-    name: string
-    username: string
-    bio?: string
-    location?: string
-    website?: string
-    avatar?: string
-    banner?: string
-  }
-  onSave: (values: ProfileFormValues & { avatar?: File; banner?: File }) => void
+    name: string;
+    username: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    avatar?: string;
+    banner?: string;
+  };
+  onSave: (
+    values: ProfileFormValues & { avatar?: File; banner?: File },
+  ) => void;
 }
 
-export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditProfileDialogProps) {
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [bannerFile, setBannerFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export function EditProfileDialog({
+  open,
+  onOpenChange,
+  profile,
+  onSave,
+}: EditProfileDialogProps) {
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-  const bannerInputRef = useRef<HTMLInputElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -91,50 +112,50 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
       location: profile.location || "",
       website: profile.website || "",
     },
-  })
+  });
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setAvatarFile(file)
-      const reader = new FileReader()
+      setAvatarFile(file);
+      const reader = new FileReader();
       reader.onload = () => {
-        setAvatarPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setBannerFile(file)
-      const reader = new FileReader()
+      setBannerFile(file);
+      const reader = new FileReader();
       reader.onload = () => {
-        setBannerPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setBannerPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const removeAvatar = () => {
-    setAvatarFile(null)
-    setAvatarPreview(null)
+    setAvatarFile(null);
+    setAvatarPreview(null);
     if (avatarInputRef.current) {
-      avatarInputRef.current.value = ""
+      avatarInputRef.current.value = "";
     }
-  }
+  };
 
   const removeBanner = () => {
-    setBannerFile(null)
-    setBannerPreview(null)
+    setBannerFile(null);
+    setBannerPreview(null);
     if (bannerInputRef.current) {
-      bannerInputRef.current.value = ""
+      bannerInputRef.current.value = "";
     }
-  }
+  };
 
   const onSubmit = (values: ProfileFormValues) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     // Simulate API call
     setTimeout(() => {
@@ -142,11 +163,11 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
         ...values,
         avatar: avatarFile || undefined,
         banner: bannerFile || undefined,
-      })
-      setIsSubmitting(false)
-      onOpenChange(false)
-    }, 1500)
-  }
+      });
+      setIsSubmitting(false);
+      onOpenChange(false);
+    }, 1500);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,7 +185,9 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <DialogDescription className="text-sm">Make changes to your profile information.</DialogDescription>
+          <DialogDescription className="text-sm">
+            Make changes to your profile information.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 p-4 pt-0">
@@ -173,7 +196,11 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
             <div className="relative">
               <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg bg-muted">
                 <Image
-                  src={bannerPreview || profile.banner || "/placeholder.svg?height=300&width=1200"}
+                  src={
+                    bannerPreview ||
+                    profile.banner ||
+                    "/placeholder.svg?height=300&width=1200"
+                  }
                   alt="Banner"
                   fill
                   className="object-cover"
@@ -196,7 +223,12 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
                     <Camera className="h-4 w-4" />
                   </Button>
                   {bannerPreview && (
-                    <Button size="sm" variant="destructive" className="h-8 w-8 rounded-full" onClick={removeBanner}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 rounded-full"
+                      onClick={removeBanner}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   )}
@@ -209,7 +241,11 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
               <div className="relative">
                 <div className="relative h-16 w-16 overflow-hidden rounded-full border-4 border-background sm:h-20 sm:w-20">
                   <Image
-                    src={avatarPreview || profile.avatar || "/placeholder.svg?height=120&width=120"}
+                    src={
+                      avatarPreview ||
+                      profile.avatar ||
+                      "/placeholder.svg?height=120&width=120"
+                    }
                     alt="Avatar"
                     fill
                     className="object-cover"
@@ -248,12 +284,17 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
 
               <div className="flex-1">
                 <h3 className="text-sm font-medium">Profile Picture</h3>
-                <p className="text-xs text-muted-foreground">Upload a new profile picture</p>
+                <p className="text-xs text-muted-foreground">
+                  Upload a new profile picture
+                </p>
               </div>
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -277,7 +318,9 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
-                      <FormDescription className="text-xs">Your unique username for your profile URL.</FormDescription>
+                      <FormDescription className="text-xs">
+                        Your unique username for your profile URL.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -290,9 +333,16 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
                     <FormItem>
                       <FormLabel>Bio</FormLabel>
                       <FormControl>
-                        <Textarea {...field} placeholder="Tell us about yourself" className="resize-none" rows={3} />
+                        <Textarea
+                          {...field}
+                          placeholder="Tell us about yourself"
+                          className="resize-none"
+                          rows={3}
+                        />
                       </FormControl>
-                      <FormDescription className="text-xs">{field.value?.length || 0}/160 characters</FormDescription>
+                      <FormDescription className="text-xs">
+                        {field.value?.length || 0}/160 characters
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -336,7 +386,11 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-initial">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 sm:flex-initial"
+                  >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -353,6 +407,5 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSave }: EditP
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
