@@ -1,9 +1,18 @@
+import { DetailUserInfo, User } from "./response";
+
 export type MediaState = {
-  config: {};
-  flag: boolean;
-  //   actions: MediaAction;
+  user: DetailUserInfo | User | {};
+  token: {
+    idToken: string;
+    refreshToken: string;
+  };
 };
 
-export type MediaAction = {};
+export type MediaAction = {
+  actions: {
+    updateTokens: (tokens: MediaState["tokens"]) => void;
+    updateUserInfo: (info: MediaState["user"]) => void;
+  };
+};
 
 export type MediaStore = MediaState & MediaAction;
