@@ -20,7 +20,7 @@ interface CommentSectionProps {
   postId: string;
   comments: Comment[];
   onAddComment: (postId: string, content: string) => void;
-  onLikeComment: (commentId: string) => void;
+  onLikeComment: (commentId: string,like:boolean) => void;
 }
 
 export function CommentSection({

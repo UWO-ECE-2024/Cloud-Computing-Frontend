@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -41,7 +41,7 @@ export default function PostPage() {
   );
 
   const commentFromPost: SWRResponse<CommentsResponse> = useSWR(
-    [`/api/v1/posts/${params.id}/comments`, token],
+    [`/api/v1/comments/${params.id}/comments`, token],
     ([url, token]) =>
       fetcher({
         method: "GET",
@@ -54,9 +54,27 @@ export default function PostPage() {
     try {
       await fetcher({
         method: "POST",
-        path: `/api/v1/posts/${postId}/comments`,
+        path: `/api/v1/comments/${postId}/comments`,
         token: token.idToken,
         data: { content },
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Something goes wrong",
+        description: (e as any).info?.message || "An unknown error occurred",
+      });
+    }finally{
+      commentFromPost.mutate()
+    }
+  };
+
+  const handleLikeComment = async (commentId: string,like:boolean) => {
+    try {
+      await fetcher({
+        method: "POST",
+        path: like?`/api/v1/comment-likes/${commentId}/unlike`:`/api/v1/comment-likes/${commentId}/like`,
+        token: token.idToken,
       });
     } catch (e) {
       toast({
@@ -67,21 +85,6 @@ export default function PostPage() {
     }
   };
 
-  const handleLikeComment = async (commentId: string) => {
-    try {
-      await fetcher({
-        method: "POST",
-        path: `/api/v1/comment-likes/${commentId}/like`,
-        token: token.idToken,
-      });
-    } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "Something goes wrong",
-        description: (e as any).info?.message || "An unknown error occurred",
-      });
-    }
-  };
 
   return (
     <>
