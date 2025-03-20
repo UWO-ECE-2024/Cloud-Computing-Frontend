@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/themeToggle";
+import { useUser } from "@/store";
 
 const navItems = [
   {
@@ -33,7 +34,7 @@ const navItems = [
 
 export function Navbar() {
   const pathname = usePathname();
-
+  const user = useUser();
   return (
     <nav className="fixed bottom-0 left-0 z-50 w-full border-t bg-background p-2 backdrop-blur-lg md:top-0 md:bottom-auto md:border-b md:border-t-0">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between px-4">
@@ -45,12 +46,24 @@ export function Navbar() {
 
         <div className="flex w-full items-center justify-around md:w-auto md:justify-start md:gap-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname ===
+              (item.name === "Profile" && "id" in user
+                ? `/profile/${user.id}`
+                : item.href);
 
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={
+                  item.name === "Profile" && "id" in user
+                    ? `/profile/${user.id}`
+                    : item.href
+                }
+                href={
+                  item.name === "Profile" && "id" in user
+                    ? `/profile/${user.id}`
+                    : item.href
+                }
                 className={cn(
                   "relative flex flex-col items-center justify-center p-2 md:flex-row md:gap-2 md:px-3 md:py-2",
                   isActive

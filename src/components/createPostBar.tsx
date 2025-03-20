@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { useUser } from "@/store";
 
 interface CreatePostProps {
   onSubmit: (content: string, image?: File) => void;
@@ -21,6 +22,7 @@ export function CreatePost({
   isSubmitting = false,
 }: CreatePostProps) {
   const [content, setContent] = useState("");
+  const user = useUser();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +68,9 @@ export function CreatePost({
             <Avatar>
               <AvatarImage src="/placeholder-user.jpg" alt="User" />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                U
+                {"displayName" in user && !!user.displayName
+                  ? user.displayName.charAt(0)
+                  : "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">

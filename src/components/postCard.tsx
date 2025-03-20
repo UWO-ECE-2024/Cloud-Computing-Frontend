@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
@@ -23,39 +23,75 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export interface Post {
-  id: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    avatar?: string;
-  };
-  content: string;
-  image?: string;
-  createdAt: Date;
-  likes: number;
-  comments: number;
-  liked?: boolean;
-}
+import { DetailPostInfo } from "@/types/response";
+import useSWR, { SWRResponse, useSWRConfig } from "swr";
+import { useToken, useUser } from "@/store";
+import { fetcher } from "@/utils/fetcher";
+import { useRouter } from "next/navigation";
 
 interface PostCardProps {
-  post: Post;
+  post: DetailPostInfo;
   onLike?: (id: string) => void;
   onComment?: (id: string) => void;
   onDelete?: (id: string) => void;
+  mutate?: () => void;
 }
 
-export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
-  const [liked, setLiked] = useState(post.liked || false);
-  const [likeCount, setLikeCount] = useState(post.likes);
+interface LikeResponse {
+  message: string;
+  hasLiked: boolean;
+}
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
-    onLike?.(post.id);
+export function PostCard({
+  post,
+  onLike,
+  onComment,
+  onDelete,
+  mutate,
+}: PostCardProps) {
+  const [liked, setLiked] = useState(false);
+  const router = useRouter();
+  const token = useToken();
+  const user = useUser();
+  const isLike: SWRResponse<LikeResponse> = useSWR(
+    [`/api/v1/post-likes/${post.id}/hasLiked`, token],
+    ([url, token]) =>
+      fetcher({ method: "GET", token: token.idToken, path: url }),
+  );
+  const [likeCount, setLikeCount] = useState(post._count.likes ?? 0);
+  const handleLike = async () => {
+    try {
+      setLiked(!liked);
+      setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+      await fetcher({
+        method: "POST",
+        path: !liked
+          ? `/api/v1/post-likes/${post.id}/like`
+          : `/api/v1/post-likes/${post.id}/unlike`,
+        token: token.idToken,
+      });
+    } catch (e) {
+      console.log(e);
+    }
   };
+
+  const handleDelete = async () => {
+    try {
+      await fetcher({
+        method: "DELETE",
+        path: `/api/v1/posts/${post.id}`,
+        token: token.idToken,
+      });
+    } finally {
+      !!mutate && mutate();
+    }
+  };
+
+  useEffect(() => {
+    if (isLike.data && isLike.data.hasLiked !== liked) {
+      setLiked(isLike.data.hasLiked);
+    }
+  }, [isLike.data]);
 
   return (
     <motion.div
@@ -67,9 +103,12 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
         <CardHeader className="flex flex-row items-center gap-4 p-4">
           <Link href={`/profile/${post.user.id}`} className="flex-shrink-0">
             <Avatar>
-              <AvatarImage src={post.user.avatar} alt={post.user.name} />
+              <AvatarImage
+                src={post.user.profilePictureUrl}
+                alt={post.user.username}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {post.user.name.charAt(0)}
+                {post.user.displayName.charAt(0)}
               </AvatarFallback>
             </Avatar>
           </Link>
@@ -80,7 +119,7 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
                   href={`/profile/${post.user.id}`}
                   className="font-semibold hover:underline"
                 >
-                  {post.user.name}
+                  {post.user.displayName}
                 </Link>
                 <div className="text-sm text-muted-foreground">
                   @{post.user.username} ·{" "}
@@ -100,13 +139,13 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>Copy link</DropdownMenuItem>
-                  <DropdownMenuItem>Report</DropdownMenuItem>
-                  {post.user.id === "current-user" && (
+
+                  {"id" in user && post.userId === user.id && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
-                        onClick={() => onDelete?.(post.id)}
+                        onClick={handleDelete}
                       >
                         Delete
                       </DropdownMenuItem>
@@ -121,10 +160,10 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
           <div className="px-4 py-2">
             <p className="whitespace-pre-wrap">{post.content}</p>
           </div>
-          {post.image && (
+          {post.mediaUrl && (
             <div className="relative aspect-video w-full overflow-hidden sm:aspect-[2/1]">
               <Image
-                src={post.image || "/images/sample.jpeg"}
+                src={post.mediaUrl || "/images/sample.jpeg"}
                 alt="Post image"
                 fill
                 className="object-cover"
@@ -149,10 +188,10 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
             variant="ghost"
             size="sm"
             className="flex gap-1 text-muted-foreground"
-            onClick={() => onComment?.(post.id)}
+            onClick={() => router.push(`/post/${post.id}`)}
           >
             <MessageCircle className="h-4 w-4" />
-            <span>{post.comments}</span>
+            <span>{post._count.comments}</span>
           </Button>
           <Button variant="ghost" size="sm" className="text-muted-foreground">
             <Share className="h-4 w-4" />

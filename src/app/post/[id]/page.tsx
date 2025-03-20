@@ -1,120 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
-import { PostCard, type Post } from "@/components/postCard";
-import { CommentSection, type Comment } from "@/components/commentSection";
+import { PostCard } from "@/components/postCard";
+import { CommentSection } from "@/components/commentSection";
 import { Navbar } from "@/components/navbar";
+import useSWR, { SWRResponse } from "swr";
+import { useToken } from "@/store";
+import { fetcher } from "@/utils/fetcher";
+import { DetailPostInfo, Comment } from "@/types/response";
+import { useToast } from "@/hooks/use-toast";
 
-// Sample data
-const samplePost: Post = {
-  id: "1",
-  user: {
-    id: "user1",
-    name: "Jim Luo",
-    username: "jimluo_",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  content:
-    "Just launched my new portfolio website! Check it out and let me know what you think 🚀",
-  image: "/placeholder.svg?height=400&width=600",
-  createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-  likes: 24,
-  comments: 5,
-};
+interface PostResponse {
+  message: string;
+  post: DetailPostInfo;
+}
 
-const sampleComments: Comment[] = [
-  {
-    id: "c1",
-    user: {
-      id: "user2",
-      name: "Emma Wilson",
-      username: "emmaw",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content: "This looks amazing! Love the design choices.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    likes: 3,
-  },
-  {
-    id: "c2",
-    user: {
-      id: "user3",
-      name: "Sarah Miller",
-      username: "sarahm",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content: "Great work! What technologies did you use to build it?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
-    likes: 2,
-  },
-  {
-    id: "c3",
-    user: {
-      id: "current-user",
-      name: "You",
-      username: "yourusername",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    content: "I really like the minimalist approach. Clean and effective!",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-    likes: 5,
-    liked: true,
-  },
-];
+interface CommentsResponse {
+  message: string;
+  comments: Comment[];
+}
 
-export default function PostPage({ params }: { params: { id: string } }) {
+export default function PostPage() {
+  const params = useParams();
   const router = useRouter();
-  const [post, setPost] = useState<Post>(samplePost);
-  const [comments, setComments] = useState<Comment[]>(sampleComments);
+  const { toast } = useToast();
+  const token = useToken();
+  const postById: SWRResponse<PostResponse> = useSWR(
+    [`/api/v1/posts/${params.id}`, token],
+    ([url, token]) =>
+      fetcher({
+        method: "GET",
+        path: url,
+        token: token.idToken,
+      }),
+  );
 
-  const handleLike = () => {
-    setPost({
-      ...post,
-      liked: !post.liked,
-      likes: post.liked ? post.likes - 1 : post.likes + 1,
-    });
+  const commentFromPost: SWRResponse<CommentsResponse> = useSWR(
+    [`/api/v1/comments/${params.id}/comments`, token],
+    ([url, token]) =>
+      fetcher({
+        method: "GET",
+        path: url,
+        token: token.idToken,
+      }),
+  );
+
+  const handleAddComment = async (postId: string, content: string) => {
+    try {
+      await fetcher({
+        method: "POST",
+        path: `/api/v1/comments/${postId}/comments`,
+        token: token.idToken,
+        data: { content },
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Something goes wrong",
+        description: (e as any).info?.message || "An unknown error occurred",
+      });
+    }finally{
+      commentFromPost.mutate()
+    }
   };
 
-  const handleAddComment = (postId: string, content: string) => {
-    const newComment: Comment = {
-      id: `comment-${Date.now()}`,
-      user: {
-        id: "current-user",
-        name: "You",
-        username: "yourusername",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content,
-      createdAt: new Date(),
-      likes: 0,
-      liked: false,
-    };
-
-    setComments([newComment, ...comments]);
-    setPost({
-      ...post,
-      comments: post.comments + 1,
-    });
+  const handleLikeComment = async (commentId: string,like:boolean) => {
+    try {
+      await fetcher({
+        method: "POST",
+        path: like?`/api/v1/comment-likes/${commentId}/unlike`:`/api/v1/comment-likes/${commentId}/like`,
+        token: token.idToken,
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Something goes wrong",
+        description: (e as any).info?.message || "An unknown error occurred",
+      });
+    }
   };
 
-  const handleLikeComment = (commentId: string) => {
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? {
-              ...comment,
-              liked: !comment.liked,
-              likes: comment.liked ? comment.likes - 1 : comment.likes + 1,
-            }
-          : comment,
-      ),
-    );
-  };
 
   return (
     <>
@@ -139,14 +109,17 @@ export default function PostPage({ params }: { params: { id: string } }) {
             <h1 className="text-xl font-bold">Post</h1>
           </div>
 
-          <PostCard post={post} onLike={handleLike} />
+          {postById.isLoading && <p>Loading...</p>}
+          {!!postById.data?.post && <PostCard post={postById.data?.post} />}
 
-          <CommentSection
-            postId={params.id}
-            comments={comments}
-            onAddComment={handleAddComment}
-            onLikeComment={handleLikeComment}
-          />
+        
+              <CommentSection
+                postId={params.id as string}
+                comments={commentFromPost.data?.comments ?? []}
+                onAddComment={handleAddComment}
+                onLikeComment={handleLikeComment}
+              />
+          {commentFromPost.isLoading && <p>Loading...</p>}
         </motion.div>
       </main>
     </>

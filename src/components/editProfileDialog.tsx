@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Camera, Loader2, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,17 +28,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DetailUserInfo } from "@/types/response";
+import { useActions, useToken, useUser } from "@/store";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import useSWR, { useSWRConfig } from "swr";
+import { fetcher } from "@/utils/fetcher";
+import { useToast } from "@/hooks/use-toast";
 
 const profileFormSchema = z.object({
-  name: z
-    .string()
-    .min(2, {
-      message: "Name must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Name must not be longer than 30 characters.",
-    }),
-  username: z
+  // username: z
+  //   .string()
+  //   .min(2, {
+  //     message: "Name must be at least 2 characters.",
+  //   })
+  //   .max(30, {
+  //     message: "Name must not be longer than 30 characters.",
+  //   }),
+  displayName: z
     .string()
     .min(2, {
       message: "Username must be at least 2 characters.",
@@ -74,25 +80,13 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  profile: {
-    name: string;
-    username: string;
-    bio?: string;
-    location?: string;
-    website?: string;
-    avatar?: string;
-    banner?: string;
-  };
-  onSave: (
-    values: ProfileFormValues & { avatar?: File; banner?: File },
-  ) => void;
+  profile: DetailUserInfo;
 }
 
 export function EditProfileDialog({
   open,
   onOpenChange,
   profile,
-  onSave,
 }: EditProfileDialogProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -103,17 +97,22 @@ export function EditProfileDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
+  const token = useToken();
+  const { toast } = useToast();
+  const updateUser = useActions().updateUserInfo;
+  const user = useUser();
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: profile.name,
-      username: profile.username,
-      bio: profile.bio || "",
-      location: profile.location || "",
-      website: profile.website || "",
+      displayName: profile.displayName ?? "",
+      bio: profile.bio ?? "",
+      location: profile.location ?? "",
+      website: profile.website ?? "",
     },
   });
 
+  const { mutate } = useSWRConfig();
+  const CURRENT_USER_KEY = "/api/v1/users/me";
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -154,24 +153,42 @@ export function EditProfileDialog({
     }
   };
 
-  const onSubmit = (values: ProfileFormValues) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      onSave({
-        ...values,
-        avatar: avatarFile || undefined,
-        banner: bannerFile || undefined,
+    try {
+      const updatedProfile = await fetcher({
+        path: CURRENT_USER_KEY,
+        method: "PUT",
+        token: token.idToken,
+        data: { ...values },
       });
+      updateUser(updatedProfile);
+
+      toast({
+        title: "Success",
+        description: "Your info update has been applied",
+      });
+      mutate(CURRENT_USER_KEY);
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (e as any).info?.message || "An unknown error occurred",
+      });
+    } finally {
       setIsSubmitting(false);
       onOpenChange(false);
-    }, 1500);
+    }
   };
+
+  useEffect(() => {
+    form.reset(user);
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px] w-full p-0 h-[90vh] sm:h-auto overflow-auto">
+      <DialogContent className="sm:max-w-[525px] w-full p-0 h-[90vh]  overflow-auto ">
         <DialogHeader className="sticky top-0 z-10 bg-background p-4 pb-2">
           <div className="flex items-center justify-between">
             <DialogTitle>Edit profile</DialogTitle>
@@ -196,17 +213,13 @@ export function EditProfileDialog({
             <div className="relative">
               <div className="relative aspect-[3/1] w-full overflow-hidden rounded-lg bg-muted">
                 <Image
-                  src={
-                    bannerPreview ||
-                    profile.banner ||
-                    "/placeholder.svg?height=300&width=1200"
-                  }
+                  src={"/images/sample.jpeg?height=300&width=1200"}
                   alt="Banner"
                   fill
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20" />
-                <div className="absolute bottom-2 right-2 flex gap-2">
+                {/* <div className="absolute bottom-2 right-2 flex gap-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -232,7 +245,7 @@ export function EditProfileDialog({
                       <X className="h-4 w-4" />
                     </Button>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -240,16 +253,23 @@ export function EditProfileDialog({
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="relative h-16 w-16 overflow-hidden rounded-full border-4 border-background sm:h-20 sm:w-20">
-                  <Image
-                    src={
-                      avatarPreview ||
-                      profile.avatar ||
-                      "/placeholder.svg?height=120&width=120"
-                    }
-                    alt="Avatar"
-                    fill
-                    className="object-cover"
-                  />
+                  {!!profile.profilePictureUrl &&
+                  profile.profilePictureUrl.length > 0 ? (
+                    <Image
+                      src={profile.profilePictureUrl}
+                      alt="Avatar"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <Avatar className="w-full h-full">
+                      <AvatarFallback className="relative bg-primary text-primary-foreground ">
+                        {"displayName" in profile && !!profile.displayName
+                          ? profile.displayName.charAt(0)
+                          : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
                 <div className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2">
                   <input
@@ -295,9 +315,9 @@ export function EditProfileDialog({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                <FormField
+                {/* <FormField
                   control={form.control}
-                  name="name"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Name</FormLabel>
@@ -307,11 +327,11 @@ export function EditProfileDialog({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 <FormField
                   control={form.control}
-                  name="username"
+                  name="displayName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Username</FormLabel>

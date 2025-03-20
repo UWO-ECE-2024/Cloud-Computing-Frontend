@@ -12,26 +12,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-
-export interface Comment {
-  id: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    avatar?: string;
-  };
-  content: string;
-  createdAt: Date;
-  likes: number;
-  liked?: boolean;
-}
+import { useUser } from "@/store";
+import { Comment } from "@/types/response";
+import { CommentAction } from "./commentAction";
 
 interface CommentSectionProps {
   postId: string;
   comments: Comment[];
   onAddComment: (postId: string, content: string) => void;
-  onLikeComment: (commentId: string) => void;
+  onLikeComment: (commentId: string,like:boolean) => void;
 }
 
 export function CommentSection({
@@ -40,6 +29,7 @@ export function CommentSection({
   onAddComment,
   onLikeComment,
 }: CommentSectionProps) {
+  const user = useUser();
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,13 +37,9 @@ export function CommentSection({
     e.preventDefault();
     if (newComment.trim()) {
       setIsSubmitting(true);
-
-      // Simulate comment submission
-      setTimeout(() => {
-        onAddComment(postId, newComment);
-        setNewComment("");
-        setIsSubmitting(false);
-      }, 500);
+      onAddComment(postId, newComment);
+      setNewComment("");
+      setIsSubmitting(false);
     }
   };
 
@@ -65,7 +51,9 @@ export function CommentSection({
         <Avatar className="h-8 w-8">
           <AvatarImage src="/placeholder-user.jpg" alt="Your avatar" />
           <AvatarFallback className="bg-primary text-primary-foreground">
-            U
+            {"displayName" in user && !!user.displayName
+              ? user.displayName.charAt(0)
+              : "U"}
           </AvatarFallback>
         </Avatar>
         <div className="relative flex-1">
@@ -98,16 +86,19 @@ export function CommentSection({
             className="flex gap-2"
           >
             <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
+              <AvatarImage
+                src={comment.user.profilePictureUrl}
+                alt={comment.user.username}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {comment.user.name.charAt(0)}
+                {comment.user.username.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-1">
               <div className="rounded-lg bg-muted p-3">
                 <div className="flex items-center justify-between">
                   <div className="font-medium">
-                    {comment.user.name}{" "}
+                    {comment.user.username}{" "}
                     <span className="text-xs text-muted-foreground">
                       @{comment.user.username}
                     </span>
@@ -120,20 +111,10 @@ export function CommentSection({
                 </div>
                 <p className="mt-1 text-sm">{comment.content}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-6 gap-1 px-2 text-xs",
-                  comment.liked ? "text-red-500" : "text-muted-foreground",
-                )}
-                onClick={() => onLikeComment(comment.id)}
-              >
-                <Heart
-                  className={cn("h-3 w-3", comment.liked && "fill-current")}
-                />
-                <span>{comment.likes}</span>
-              </Button>
+              <CommentAction
+                commentId={comment.id}
+                onLikeComment={onLikeComment}
+              />
             </div>
           </motion.div>
         ))}
