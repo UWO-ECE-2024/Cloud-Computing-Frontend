@@ -46,7 +46,11 @@ export function Navbar() {
 
         <div className="flex w-full items-center justify-around md:w-auto md:justify-start md:gap-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname ===
+              (item.name === "Profile" && "id" in user
+                ? `/profile/${user.id}`
+                : item.href);
 
             return (
               <Link

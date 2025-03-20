@@ -103,7 +103,12 @@ export function EditProfileDialog({
   const user = useUser();
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: user,
+    defaultValues: {
+      displayName: profile.displayName ?? "",
+      bio: profile.bio ?? "",
+      location: profile.location ?? "",
+      website: profile.website ?? "",
+    },
   });
 
   const { mutate } = useSWRConfig();
@@ -176,6 +181,10 @@ export function EditProfileDialog({
       onOpenChange(false);
     }
   };
+
+  useEffect(() => {
+    form.reset(user);
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

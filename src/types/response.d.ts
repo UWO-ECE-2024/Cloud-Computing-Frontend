@@ -29,3 +29,21 @@ export type DetailPostInfo = Post & {
     likes: number;
   };
 };
+
+export type Comment = {
+  id: string;
+  content: string;
+  postId: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    username: string;
+    displayName: string;
+    profilePictureUrl: string;
+  };
+  _count: {
+    likes: number;
+  };
+};

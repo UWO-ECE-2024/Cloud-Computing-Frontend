@@ -6,14 +6,40 @@ import { motion } from "framer-motion";
 
 import { CreatePost } from "@/components/createPostBar";
 import { PostCard } from "@/components/postCard";
+import { useToast } from "@/hooks/use-toast";
+import { fetcher } from "@/utils/fetcher";
+import { useToken } from "@/store";
+import { useSWRConfig } from "swr";
 
 export default function Home() {
   const router = useRouter();
+  const token = useToken();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleCreatePost = (content: string, image?: File) => {
+  const { toast } = useToast();
+  const { mutate } = useSWRConfig();
+  const handleCreatePost = async (content: string, image?: File) => {
     setIsSubmitting(true);
-    setIsSubmitting(false);
+    try {
+      await fetcher({
+        method: "POST",
+        token: token.idToken,
+        path: "/api/v1/posts",
+        data: {
+          content,
+        },
+      });
+      // todo refetch home page
+      toast({
+        title: "Success",
+      });
+    } catch (e) {
+      toast({
+        title: "Something Wrong",
+        description: (e as any).info?.message || "An unknown error occurred",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleComment = (id: string) => {

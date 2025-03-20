@@ -27,13 +27,14 @@ import { DetailPostInfo } from "@/types/response";
 import useSWR, { SWRResponse, useSWRConfig } from "swr";
 import { useToken, useUser } from "@/store";
 import { fetcher } from "@/utils/fetcher";
-import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface PostCardProps {
   post: DetailPostInfo;
   onLike?: (id: string) => void;
   onComment?: (id: string) => void;
   onDelete?: (id: string) => void;
+  mutate?: () => void;
 }
 
 interface LikeResponse {
@@ -41,8 +42,15 @@ interface LikeResponse {
   hasLiked: boolean;
 }
 
-export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
+export function PostCard({
+  post,
+  onLike,
+  onComment,
+  onDelete,
+  mutate,
+}: PostCardProps) {
   const [liked, setLiked] = useState(false);
+  const router = useRouter();
   const token = useToken();
   const user = useUser();
   const isLike: SWRResponse<LikeResponse> = useSWR(
@@ -50,22 +58,20 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
     ([url, token]) =>
       fetcher({ method: "GET", token: token.idToken, path: url }),
   );
-  const [likeCount, setLikeCount] = useState(post._count.likes);
-  const { mutate } = useSWRConfig();
-  const REFRESHKEY = `/api/v1/posts/by-user/${"id" in user ? user.id : ""}/all`;
+  const [likeCount, setLikeCount] = useState(post._count.likes ?? 0);
   const handleLike = async () => {
     try {
       setLiked(!liked);
       setLikeCount(liked ? likeCount - 1 : likeCount + 1);
       await fetcher({
         method: "POST",
-        path: liked
+        path: !liked
           ? `/api/v1/post-likes/${post.id}/like`
           : `/api/v1/post-likes/${post.id}/unlike`,
         token: token.idToken,
       });
-    } finally {
-      mutate(REFRESHKEY);
+    } catch (e) {
+      console.log(e);
     }
   };
 
@@ -77,7 +83,7 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
         token: token.idToken,
       });
     } finally {
-      mutate(REFRESHKEY);
+      !!mutate && mutate();
     }
   };
 
@@ -182,7 +188,7 @@ export function PostCard({ post, onLike, onComment, onDelete }: PostCardProps) {
             variant="ghost"
             size="sm"
             className="flex gap-1 text-muted-foreground"
-            onClick={() => onComment?.(post.id)}
+            onClick={() => router.push(`/post/${post.id}`)}
           >
             <MessageCircle className="h-4 w-4" />
             <span>{post._count.comments}</span>

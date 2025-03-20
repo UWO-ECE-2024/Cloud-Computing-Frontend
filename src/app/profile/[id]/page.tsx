@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import dayjs from "dayjs";
 import { DetailPostInfo, DetailUserInfo } from "@/types/response";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 interface postsFromResponse {
   message: string;
@@ -33,6 +34,7 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
+  const router = useRouter()
   const params = useParams();
   const user = useUser();
   const { toast } = useToast();
@@ -87,6 +89,7 @@ export default function ProfilePage() {
         title: "error",
         description: User.error.info.message,
       });
+      User.error.status === 401 && router.push("/login")
     }
   }, [User.error]);
 
@@ -261,6 +264,7 @@ export default function ProfilePage() {
                       key={post.id}
                       post={post}
                       // onDelete={handleDelete}
+                      mutate={postRequests.mutate}
                     />
                   ))}
               </TabsContent>
