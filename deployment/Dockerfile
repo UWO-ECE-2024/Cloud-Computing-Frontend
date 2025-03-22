@@ -1,56 +1,34 @@
-# Use Node.js LTS version
-FROM node:18-alpine AS base
+# Build stage
+FROM node:18-alpine AS builder
 
-# Install dependencies only when needed
-FROM base AS deps
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN \
-  if [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copy package files
+COPY package*.json ./
+COPY pnpm-lock.yaml* ./
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Install dependencies
+RUN npm install -g pnpm
+RUN pnpm install
+
+# Copy source code
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
+# Build the application
+RUN pnpm run build
 
-RUN npm run build
+# Production stage
+FROM nginx:alpine
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
+# Copy the built assets
+COPY --from=builder /app/.next/static /usr/share/nginx/html/_next/static
+COPY --from=builder /app/public /usr/share/nginx/html
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+# Copy nginx configuration
+COPY deployment/nginx.conf /etc/nginx/nginx.conf
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Expose port 80
+EXPOSE 80
 
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-CMD ["node", "server.js"] 
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"] 
