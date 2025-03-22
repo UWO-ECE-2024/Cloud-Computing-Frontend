@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
@@ -64,16 +63,18 @@ export default function PostPage() {
         title: "Something goes wrong",
         description: (e as any).info?.message || "An unknown error occurred",
       });
-    }finally{
-      commentFromPost.mutate()
+    } finally {
+      commentFromPost.mutate();
     }
   };
 
-  const handleLikeComment = async (commentId: string,like:boolean) => {
+  const handleLikeComment = async (commentId: string, like: boolean) => {
     try {
       await fetcher({
         method: "POST",
-        path: like?`/api/v1/comment-likes/${commentId}/unlike`:`/api/v1/comment-likes/${commentId}/like`,
+        path: like
+          ? `/api/v1/comment-likes/${commentId}/unlike`
+          : `/api/v1/comment-likes/${commentId}/like`,
         token: token.idToken,
       });
     } catch (e) {
@@ -84,7 +85,6 @@ export default function PostPage() {
       });
     }
   };
-
 
   return (
     <>
@@ -112,13 +112,12 @@ export default function PostPage() {
           {postById.isLoading && <p>Loading...</p>}
           {!!postById.data?.post && <PostCard post={postById.data?.post} />}
 
-        
-              <CommentSection
-                postId={params.id as string}
-                comments={commentFromPost.data?.comments ?? []}
-                onAddComment={handleAddComment}
-                onLikeComment={handleLikeComment}
-              />
+          <CommentSection
+            postId={params.id as string}
+            comments={commentFromPost.data?.comments ?? []}
+            onAddComment={handleAddComment}
+            onLikeComment={handleLikeComment}
+          />
           {commentFromPost.isLoading && <p>Loading...</p>}
         </motion.div>
       </main>
