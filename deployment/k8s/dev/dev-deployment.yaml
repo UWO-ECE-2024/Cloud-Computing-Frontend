@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-deployment
+  labels:
+    app: social-media
+    env: development
+spec:
+  replicas: 1  # Single node for development
+  selector:
+    matchLabels:
+      app: social-media
+      env: development
+  template:
+    metadata:
+      labels:
+        app: social-media
+        env: development
+    spec:
+      containers:
+      - name: web-server
+        image: gcr.io/[PROJECT_ID]/social-media-frontend:dev
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: dev-db-secret
+              key: database-url
+        - name: FIREBASE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              name: dev-firebase-secret
+              key: config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: dev-db-secret
+              key: database-name
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: dev-db-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dev-db-secret
+              key: password
+        volumeMounts:
+        - name: postgres-dev-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-dev-storage
+        persistentVolumeClaim:
+          claimName: postgres-dev-pvc 

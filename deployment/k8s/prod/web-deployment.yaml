@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: social-media
+    tier: frontend
+    env: production
+spec:
+  replicas: 2  # Two replicas for high availability
+  selector:
+    matchLabels:
+      app: social-media
+      tier: frontend
+      env: production
+  template:
+    metadata:
+      labels:
+        app: social-media
+        tier: frontend
+        env: production
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cloud.google.com/gke-nodepool
+                operator: In
+                values:
+                - web-pool
+      containers:
+      - name: web-server
+        image: gcr.io/[PROJECT_ID]/social-media-frontend:prod
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: prod-db-secret
+              key: database-url
+        - name: FIREBASE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              name: prod-firebase-secret
+              key: config
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20 
