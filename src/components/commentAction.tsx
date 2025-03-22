@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Heart } from "lucide-react";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 interface CommentActionProps {
   commentId: string;
-  onLikeComment: (commentId: string,like:boolean) => void;
+  onLikeComment: (commentId: string, like: boolean) => void;
 }
 
 interface isLikeResponse {
@@ -21,7 +21,7 @@ export function CommentAction({
   commentId,
   onLikeComment,
 }: CommentActionProps) {
-	const [isLike,setIsLike] = useState(false);
+  const [isLike, setIsLike] = useState(false);
   const token = useToken();
   const isLikeComment: SWRResponse<isLikeResponse> = useSWR(
     [`/api/v1/comment-likes/${commentId}/hasLiked`, token],
@@ -32,9 +32,9 @@ export function CommentAction({
         token: token.idToken,
       }),
   );
-  useEffect(()=>{
-	isLikeComment.data && setIsLike(isLikeComment.data.hasLiked)
-  },[isLikeComment.data])
+  useEffect(() => {
+    isLikeComment.data && setIsLike(isLikeComment.data.hasLiked);
+  }, [isLikeComment.data]);
 
   return (
     !!isLikeComment.data && (
@@ -43,20 +43,14 @@ export function CommentAction({
         size="sm"
         className={cn(
           "h-6 gap-1 px-2 text-xs",
-          isLike
-            ? "text-red-500"
-            : "text-muted-foreground",
+          isLike ? "text-red-500" : "text-muted-foreground",
         )}
         onClick={() => {
-		setIsLike(!isLike)
-		onLikeComment(commentId,isLike)}}
+          setIsLike(!isLike);
+          onLikeComment(commentId, isLike);
+        }}
       >
-        <Heart
-          className={cn(
-            "h-3 w-3",
-            isLike && "fill-current",
-          )}
-        />
+        <Heart className={cn("h-3 w-3", isLike && "fill-current")} />
         <span>{isLike}</span>
       </Button>
     )

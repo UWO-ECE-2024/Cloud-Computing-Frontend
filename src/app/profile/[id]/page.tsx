@@ -1,5 +1,5 @@
 "use client";
-
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -34,7 +34,7 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
-  const router = useRouter()
+  const router = useRouter();
   const params = useParams();
   const user = useUser();
   const { toast } = useToast();
@@ -89,7 +89,7 @@ export default function ProfilePage() {
         title: "error",
         description: User.error.info.message,
       });
-      User.error.status === 401 && router.push("/login")
+      User.error.status === 401 && router.push("/login");
     }
   }, [User.error]);
 
