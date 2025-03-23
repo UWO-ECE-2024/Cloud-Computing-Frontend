@@ -14,6 +14,10 @@ RUN pnpm install
 # Copy source code
 COPY . .
 
+# Set environment variables
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+
 # Build the application
 RUN pnpm run build
 
@@ -22,19 +26,22 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files and built files
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/pnpm-lock.yaml* ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-
-# Set production environment
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED 1
 ENV PORT=3000
+
+# Install production dependencies
+COPY package*.json ./
+COPY pnpm-lock.yaml* ./
+RUN npm install -g pnpm && pnpm install --prod
+
+# Copy necessary files
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 3000
 
 # Start the application
-CMD ["pnpm", "start"] 
+CMD ["node", "server.js"] 
