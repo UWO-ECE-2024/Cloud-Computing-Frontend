@@ -15,8 +15,16 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 echo -e "${GREEN}1. Building Next.js application...${NC}"
+
+# Check and install pnpm if not found
+if ! command -v pnpm &> /dev/null; then
+  echo -e "${GREEN}pnpm not found. Installing...${NC}"
+  npm install -g pnpm
+fi
+
 pnpm install
 pnpm run build
+
 
 echo -e "${GREEN}2. Building Docker image...${NC}"
 docker build \
