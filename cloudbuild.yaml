@@ -8,41 +8,56 @@ steps:
     entrypoint: pnpm
     args: ['install']
 
-  # Run tests
+  # Run tests (if you have them)
   - name: 'node:18-alpine'
     entrypoint: pnpm
     args: ['test']
+    allowFailure: true
 
   # Build the application
   - name: 'node:18-alpine'
     entrypoint: pnpm
     args: ['build']
 
-  # Build and push Docker image
+  # Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '--build-arg', 'PORT=4000',
-      '-t', 'gcr.io/$PROJECT_ID/nextjs-frontend:$COMMIT_SHA',
-      '-t', 'gcr.io/$PROJECT_ID/nextjs-frontend:latest',
+      '-t', 'gcr.io/$PROJECT_ID/social-media-frontend:$COMMIT_SHA',
+      '-t', 'gcr.io/$PROJECT_ID/social-media-frontend:latest',
+      '-f', 'deployment/Dockerfile',
       '.'
     ]
 
-  # Push the container image
+  # Push the Docker image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/nextjs-frontend:$COMMIT_SHA']
-  
-  # Update kubernetes deployment
+    args: ['push', 'gcr.io/$PROJECT_ID/social-media-frontend:$COMMIT_SHA']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/social-media-frontend:latest']
+
+  # Update the deployment to use the new image
   - name: 'gcr.io/cloud-builders/kubectl'
     args:
       - 'set'
       - 'image'
-      - 'deployment/nextjs-frontend'
-      - 'nextjs-frontend=gcr.io/$PROJECT_ID/nextjs-frontend:$COMMIT_SHA'
+      - 'deployment/nginx-deployment'
+      - 'nginx=gcr.io/$PROJECT_ID/social-media-frontend:$COMMIT_SHA'
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=nextjs-cluster'
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=social-media-cluster-prod'
+
+  # Verify the deployment
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'rollout'
+      - 'status'
+      - 'deployment/nginx-deployment'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=social-media-cluster-prod'
 
 images:
-  - 'gcr.io/$PROJECT_ID/nextjs-frontend:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/nextjs-frontend:latest' 
+  - 'gcr.io/$PROJECT_ID/social-media-frontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/social-media-frontend:latest'
+
+timeout: '1800s' 

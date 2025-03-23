@@ -4,15 +4,18 @@ metadata:
   name: nginx-deployment
   labels:
     app: nginx
+    env: production
 spec:
-  replicas: 2
+  replicas: 2  # Two replicas for high availability
   selector:
     matchLabels:
       app: nginx
+      env: production
   template:
     metadata:
       labels:
         app: nginx
+        env: production
     spec:
       affinity:
         nodeAffinity:
@@ -25,16 +28,16 @@ spec:
                 - web-pool
       containers:
       - name: nginx
-        image: gcr.io/[PROJECT_ID]/social-media-frontend:prod
+        image: us-central1-docker.pkg.dev/[PROJECT_ID]/social-media-frontend-prod/frontend:latest
         ports:
         - containerPort: 80
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
             memory: "512Mi"
             cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
         readinessProbe:
           httpGet:
             path: /

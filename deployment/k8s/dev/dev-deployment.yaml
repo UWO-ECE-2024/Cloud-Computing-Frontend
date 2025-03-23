@@ -18,21 +18,10 @@ spec:
         env: development
     spec:
       containers:
-      - name: web-server
-        image: gcr.io/[PROJECT_ID]/social-media-frontend:dev
+      - name: nginx
+        image: us-central1-docker.pkg.dev/[PROJECT_ID]/social-media-frontend-dev/frontend:latest
         ports:
-        - containerPort: 3000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: dev-db-secret
-              key: database-url
-        - name: FIREBASE_CONFIG
-          valueFrom:
-            secretKeyRef:
-              name: dev-firebase-secret
-              key: config
+        - containerPort: 80
         resources:
           requests:
             memory: "256Mi"
