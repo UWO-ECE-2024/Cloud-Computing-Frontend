@@ -14,17 +14,21 @@ TAG=$(git rev-parse --short HEAD)
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-echo -e "${GREEN}1. Building frontend Docker image...${NC}"
+echo -e "${GREEN}1. Building Next.js application...${NC}"
+pnpm install
+pnpm run build
+
+echo -e "${GREEN}2. Building Docker image...${NC}"
 docker build \
     -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${TAG} \
     -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:latest \
     -f deployment/Dockerfile .
 
-echo -e "${GREEN}2. Pushing images to Artifact Registry...${NC}"
+echo -e "${GREEN}3. Pushing images to Artifact Registry...${NC}"
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:${TAG}
 docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${IMAGE_NAME}:latest
 
-echo -e "${GREEN}3. Applying Kubernetes configurations...${NC}"
+echo -e "${GREEN}4. Applying Kubernetes configurations...${NC}"
 # Replace the PROJECT_ID in the deployment file
 sed -i "s/\[PROJECT_ID\]/$PROJECT_ID/g" deployment/k8s/frontend-deployment.yaml
 
@@ -32,10 +36,10 @@ sed -i "s/\[PROJECT_ID\]/$PROJECT_ID/g" deployment/k8s/frontend-deployment.yaml
 kubectl apply -f deployment/k8s/frontend-deployment.yaml
 kubectl apply -f deployment/k8s/frontend-service.yaml
 
-echo -e "${GREEN}4. Waiting for deployment to be ready...${NC}"
+echo -e "${GREEN}5. Waiting for deployment to be ready...${NC}"
 kubectl rollout status deployment/frontend-deployment
 
-echo -e "${GREEN}5. Getting service information...${NC}"
+echo -e "${GREEN}6. Getting service information...${NC}"
 kubectl get service frontend-service
 
 echo -e "${GREEN}Deployment completed!${NC}"
