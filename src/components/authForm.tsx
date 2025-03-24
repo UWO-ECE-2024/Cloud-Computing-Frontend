@@ -1,34 +1,77 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Github, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useActions, useAuthStatus } from "@/store";
+import { GoogleSignInButton } from "./auth/GoogleSignInButton";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 interface AuthFormProps {
-  type: "login" | "signup";
+  type: "login" | "register";
 }
 
 export function AuthForm({ type }: AuthFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const authStatus = useAuthStatus();
+  const actions = useActions();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (type === "register" && formData.password !== formData.confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "Please ensure your passwords match.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate authentication
-    setTimeout(() => {
+    try {
+      if (type === "login") {
+        await actions.login(formData.email, formData.password);
+
+        if (authStatus === 'registration_required') {
+          router.push("/complete-profile");
+        } else {
+          router.push("/");
+        }
+      } else {
+        await actions.register(formData.email, formData.password);
+        router.push("/complete-profile");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: (error as any).message || `Failed to ${type === "login" ? "login" : "register"}`,
+      });
+    } finally {
       setIsLoading(false);
-      router.push("/");
-    }, 1500);
+    }
   };
 
   return (
@@ -50,102 +93,91 @@ export function AuthForm({ type }: AuthFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {type === "signup" && (
-          <div className="grid gap-2">
-            <Label htmlFor="name">Full Name</Label>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="name@example.com"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+        </div>
+
+        {type === "register" && (
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <Input
-              id="name"
-              placeholder="John Doe"
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="••••••••"
               required
+              value={formData.confirmPassword}
+              onChange={handleChange}
               disabled={isLoading}
             />
           </div>
         )}
 
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            {type === "login" && (
-              <Link
-                href="/forgot-password"
-                className="text-xs text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            )}
-          </div>
-          <Input id="password" type="password" required disabled={isLoading} />
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={isLoading}
+        >
           {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {type === "login" ? "Logging in..." : "Creating account..."}
-            </>
-          ) : type === "login" ? (
-            "Log in"
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
           ) : (
-            "Sign up"
+            type === "login" ? "Sign In" : "Create Account"
           )}
         </Button>
-      </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <span className="relative bg-card px-2 text-xs uppercase text-muted-foreground">
             Or continue with
           </span>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" type="button" disabled={isLoading}>
-          <Github className="mr-2 h-4 w-4" />
-          GitHub
-        </Button>
-        <Button variant="outline" type="button" disabled={isLoading}>
-          Google
-        </Button>
-      </div>
+        <GoogleSignInButton />
 
-      <div className="text-center text-sm">
-        {type === "login" ? (
-          <>
-            Don't have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-medium text-primary hover:underline"
-            >
-              Sign up
-            </Link>
-          </>
-        ) : (
-          <>
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary hover:underline"
-            >
-              Log in
-            </Link>
-          </>
-        )}
-      </div>
+        <div className="text-center text-sm">
+          {type === "login" ? (
+            <p>
+              Don't have an account?{" "}
+              <Link href="/register" className="font-medium text-primary underline underline-offset-4">
+                Sign up
+              </Link>
+            </p>
+          ) : (
+            <p>
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-primary underline underline-offset-4">
+                Sign in
+              </Link>
+            </p>
+          )}
+        </div>
+      </form>
     </motion.div>
   );
 }
