@@ -10,7 +10,7 @@ export type MediaState = {
 
 export type MediaAction = {
   actions: {
-    updateTokens: (tokens: MediaState["tokens"]) => void;
+    updateTokens: (tokens: MediaState["token"]) => void;
     updateUserInfo: (info: MediaState["user"]) => void;
   };
 };

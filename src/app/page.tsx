@@ -1,7 +1,7 @@
 "use client";
 import { Navbar } from "@/components/navbar";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import { CreatePost } from "@/components/createPostBar";
@@ -9,15 +9,39 @@ import { PostCard } from "@/components/postCard";
 import { useToast } from "@/hooks/use-toast";
 import { fetcher } from "@/utils/fetcher";
 import { useToken } from "@/store";
-import { useSWRConfig } from "swr";
+import useSWR, { SWRResponse, useSWRConfig } from "swr";
+import useSWRInfinite, {
+  SWRInfiniteResponse,
+  unstable_serialize,
+} from "swr/infinite";
+import { MediaState } from "@/types/store";
+import { DetailPostInfo } from "@/types/response";
+import { getKey } from "@/lib/utils";
+
+export interface PageResponse {
+  message: string;
+  posts: DetailPostInfo[];
+  nextCursor: string;
+  count: number;
+}
 
 export default function Home() {
   const router = useRouter();
-  const token = useToken();
+  const token: MediaState["token"] = useToken();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { mutate } = useSWRConfig();
-  const handleCreatePost = async (content: string, image?: File) => {
+
+  const post_page: SWRInfiniteResponse<PageResponse> = useSWRInfinite(
+    getKey,
+    (return_value) =>
+      fetcher({
+        method: "GET",
+        path: return_value,
+        token: token.idToken,
+      }),
+  );
+  const handleCreatePost = async (content: string, mediaUrl?: string) => {
     setIsSubmitting(true);
     try {
       await fetcher({
@@ -26,12 +50,14 @@ export default function Home() {
         path: "/api/v1/posts",
         data: {
           content,
+          ...(mediaUrl && { mediaUrl }),
         },
       });
       // todo refetch home page
       toast({
         title: "Success",
       });
+      mutate(unstable_serialize(getKey));
     } catch (e) {
       toast({
         title: "Something Wrong",
@@ -45,7 +71,6 @@ export default function Home() {
   const handleComment = (id: string) => {
     router.push(`/post/${id}`);
   };
-
   return (
     <>
       <Navbar />
@@ -67,13 +92,19 @@ export default function Home() {
             initial="hidden"
             animate="show"
           >
-            {/* {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onComment={handleComment}
-              />
-            ))} */}
+            {!post_page?.data ? (
+              <p>Loading...</p>
+            ) : (
+              post_page.data.map((page) =>
+                page.posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onComment={handleComment}
+                  />
+                )),
+              )
+            )}
           </motion.div>
         </div>
       </main>

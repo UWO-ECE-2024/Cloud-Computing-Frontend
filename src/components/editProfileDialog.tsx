@@ -30,10 +30,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DetailUserInfo } from "@/types/response";
 import { useActions, useToken, useUser } from "@/store";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { useToast } from "@/hooks/use-toast";
+import { uploadFile } from "@/services/uploadService";
 
 const profileFormSchema = z.object({
   // username: z
@@ -73,6 +74,7 @@ const profileFormSchema = z.object({
       message: "Website must not be longer than 100 characters.",
     })
     .optional(),
+  profilePictureUrl: z.string().url(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -108,6 +110,7 @@ export function EditProfileDialog({
       bio: profile.bio ?? "",
       location: profile.location ?? "",
       website: profile.website ?? "",
+      profilePictureUrl: profile.profilePictureUrl ?? null,
     },
   });
 
@@ -117,6 +120,7 @@ export function EditProfileDialog({
     const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
+      // Create a local preview
       const reader = new FileReader();
       reader.onload = () => {
         setAvatarPreview(reader.result as string);
@@ -154,14 +158,34 @@ export function EditProfileDialog({
   };
 
   const onSubmit = async (values: ProfileFormValues) => {
+    console.log("click");
     setIsSubmitting(true);
 
     try {
+      const profileData = { ...values };
+
+      if (avatarFile) {
+        toast({
+          title: "Uploading image...",
+          description: "Please wait while we upload your profile picture.",
+        });
+        const profilePictureUrl = await uploadFile(
+          avatarFile,
+          "profile-images",
+          (progress) => {
+            // Optional: Update UI with progress
+            console.log(`Upload progress: ${progress}%`);
+          },
+        );
+
+        // Add URL to profile data
+        profileData.profilePictureUrl = profilePictureUrl;
+      }
       const updatedProfile = await fetcher({
         path: CURRENT_USER_KEY,
         method: "PUT",
         token: token.idToken,
-        data: { ...values },
+        data: profileData,
       });
       updateUser(updatedProfile);
 
@@ -253,23 +277,16 @@ export function EditProfileDialog({
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="relative h-16 w-16 overflow-hidden rounded-full border-4 border-background sm:h-20 sm:w-20">
-                  {!!profile.profilePictureUrl &&
-                  profile.profilePictureUrl.length > 0 ? (
-                    <Image
-                      src={profile.profilePictureUrl}
-                      alt="Avatar"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <Avatar className="w-full h-full">
-                      <AvatarFallback className="relative bg-primary text-primary-foreground ">
-                        {"displayName" in profile && !!profile.displayName
-                          ? profile.displayName.charAt(0)
-                          : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+                  <Image
+                    src={
+                      profile.profilePictureUrl ||
+                      avatarPreview ||
+                      "/avatar.svg"
+                    }
+                    alt="Avatar"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="absolute -right-1 -top-1 sm:-right-2 sm:-top-2">
                   <input
@@ -312,7 +329,9 @@ export function EditProfileDialog({
 
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={(e) => {
+                  e.preventDefault(); // Prevent default form submission
+                }}
                 className="space-y-4"
               >
                 {/* <FormField
@@ -410,6 +429,10 @@ export function EditProfileDialog({
                     type="submit"
                     disabled={isSubmitting}
                     className="flex-1 sm:flex-initial"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await onSubmit(form.getValues());
+                    }}
                   >
                     {isSubmitting ? (
                       <>
