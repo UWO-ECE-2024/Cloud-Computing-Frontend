@@ -9,7 +9,7 @@ import {
   registerWithBackend,
   getUserProfile,
   logoutFirebase,
-  UserRegistrationData
+  UserRegistrationData,
 } from "@/services/authService";
 import { auth } from "@/services/firebase";
 
@@ -19,7 +19,12 @@ export const InitState = {
     idToken: "",
     refreshToken: "",
   },
-  authStatus: 'idle' as 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'registration_required',
+  authStatus: "idle" as
+    | "idle"
+    | "loading"
+    | "authenticated"
+    | "unauthenticated"
+    | "registration_required",
   authError: null as string | null,
 };
 
@@ -27,7 +32,7 @@ export const InitState = {
 export const mediaStore = createStore<MediaStore>()(
   persist(
     (set, get) => ({
-      ...InitState as MediaState,
+      ...(InitState as MediaState),
       actions: {
         updateTokens: (newToken: any) =>
           set((state: any) => ({ ...state, token: newToken })),
@@ -36,12 +41,15 @@ export const mediaStore = createStore<MediaStore>()(
 
         // Auth actions
         login: async (email: string, password: string) => {
-          set({ authStatus: 'loading', authError: null } as Partial<MediaStore>);
+          set({
+            authStatus: "loading",
+            authError: null,
+          } as Partial<MediaStore>);
           try {
             const user = await loginWithEmailPassword(email, password);
             const token = {
               idToken: await user.getIdToken(),
-              refreshToken: user.refreshToken
+              refreshToken: user.refreshToken,
             };
 
             set({ token });
@@ -52,27 +60,32 @@ export const mediaStore = createStore<MediaStore>()(
             if (userProfile.exists) {
               set({
                 user: userProfile.user,
-                authStatus: 'authenticated'
+                authStatus: "authenticated",
               } as Partial<MediaStore>);
             } else {
-              set({ authStatus: 'registration_required' } as Partial<MediaStore>);
+              set({
+                authStatus: "registration_required",
+              } as Partial<MediaStore>);
             }
           } catch (error) {
             set({
-              authStatus: 'unauthenticated',
-              authError: (error as any).message || "Failed to login"
+              authStatus: "unauthenticated",
+              authError: (error as any).message || "Failed to login",
             } as Partial<MediaStore>);
             throw error;
           }
         },
 
         loginWithGoogle: async () => {
-          set({ authStatus: 'loading', authError: null } as Partial<MediaStore>);
+          set({
+            authStatus: "loading",
+            authError: null,
+          } as Partial<MediaStore>);
           try {
             const user = await firebaseLoginWithGoogle();
             const token = {
               idToken: await user.getIdToken(),
-              refreshToken: user.refreshToken
+              refreshToken: user.refreshToken,
             };
 
             set({ token });
@@ -83,62 +96,79 @@ export const mediaStore = createStore<MediaStore>()(
             if (userProfile.exists) {
               set({
                 user: userProfile.user,
-                authStatus: 'authenticated'
+                authStatus: "authenticated",
               } as Partial<MediaStore>);
             } else {
-              set({ authStatus: 'registration_required' } as Partial<MediaStore>);
+              set({
+                authStatus: "registration_required",
+              } as Partial<MediaStore>);
             }
           } catch (error) {
             set({
-              authStatus: 'unauthenticated',
-              authError: (error as any).message || "Failed to login with Google"
+              authStatus: "unauthenticated",
+              authError:
+                (error as any).message || "Failed to login with Google",
             } as Partial<MediaStore>);
             throw error;
           }
         },
 
         register: async (email: string, password: string) => {
-          set({ authStatus: 'loading', authError: null } as Partial<MediaStore>);
+          set({
+            authStatus: "loading",
+            authError: null,
+          } as Partial<MediaStore>);
           try {
             const user = await registerWithFirebase(email, password);
             const token = {
               idToken: await user.getIdToken(),
-              refreshToken: user.refreshToken
+              refreshToken: user.refreshToken,
             };
 
             set({
               token,
-              authStatus: 'registration_required'
+              authStatus: "registration_required",
             } as Partial<MediaStore>);
           } catch (error) {
             set({
-              authStatus: 'unauthenticated',
-              authError: (error as any).message || "Failed to register"
+              authStatus: "unauthenticated",
+              authError: (error as any).message || "Failed to register",
             } as Partial<MediaStore>);
             throw error;
           }
         },
 
-        completeRegistration: async (username: string, displayName: string, bio?: string) => {
+        completeRegistration: async (
+          username: string,
+          displayName: string,
+          bio?: string,
+        ) => {
           const { token } = get();
-          set({ authStatus: 'loading', authError: null } as Partial<MediaStore>);
+          set({
+            authStatus: "loading",
+            authError: null,
+          } as Partial<MediaStore>);
 
           try {
             const userData: UserRegistrationData = {
               username,
               displayName,
-              ...(bio && { bio })
+              ...(bio && { bio }),
             };
 
-            const registeredUser = await registerWithBackend(token.idToken, userData);
+            const registeredUser = await registerWithBackend(
+              token.idToken,
+              userData,
+            );
 
             set({
               user: registeredUser,
-              authStatus: 'authenticated'
+              authStatus: "authenticated",
             } as Partial<MediaStore>);
           } catch (error) {
             set({
-              authError: (error as any).message || "Failed to complete registration"
+              authError:
+                (error as any).message || "Failed to complete registration",
             } as Partial<MediaStore>);
             throw error;
           }
@@ -163,23 +193,23 @@ export const mediaStore = createStore<MediaStore>()(
             if (userProfile.exists) {
               set({
                 user: userProfile.user,
-                authStatus: 'authenticated'
+                authStatus: "authenticated",
               } as Partial<MediaStore>);
             }
           } catch (error) {
             console.error("Failed to refresh user profile", error);
           }
-        }
+        },
       },
     }),
     {
       name: "media-store",
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (state: any) => {
+      partialize: (state) => {
         return {
           token: state.token,
           user: state.user,
-          authStatus: state.authStatus
+          authStatus: state.authStatus,
         };
       },
     },
@@ -187,19 +217,21 @@ export const mediaStore = createStore<MediaStore>()(
 );
 
 // For backward compatibility
-export const createMediaStore = (initState: MediaState = InitState as MediaState) => {
+export const createMediaStore = (
+  initState: MediaState = InitState as MediaState,
+) => {
   return mediaStore;
 };
 
 // Listen for auth state changes
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   auth.onAuthStateChanged(async (user) => {
     if (!user) return;
 
     try {
       const token = {
         idToken: await user.getIdToken(),
-        refreshToken: user.refreshToken
+        refreshToken: user.refreshToken,
       };
 
       // Access the actions directly from the store instance
@@ -212,7 +244,7 @@ if (typeof window !== 'undefined') {
       try {
         // TypeScript doesn't recognize this method due to type inference limitations
         // but we know it exists in our implementation
-        (state.actions as any).refreshUserProfile();
+        state.actions.refreshUserProfile();
       } catch (refreshError) {
         console.error("Failed to refresh profile", refreshError);
       }
@@ -225,5 +257,7 @@ if (typeof window !== 'undefined') {
 export const useToken = () => useMediaStore((state: any) => state.token);
 export const useUser = () => useMediaStore((state: any) => state.user);
 export const useActions = () => useMediaStore((state: any) => state.actions);
-export const useAuthStatus = () => useMediaStore((state: any) => state.authStatus);
-export const useAuthError = () => useMediaStore((state: any) => state.authError);
+export const useAuthStatus = () =>
+  useMediaStore((state: any) => state.authStatus);
+export const useAuthError = () =>
+  useMediaStore((state: any) => state.authError);

@@ -7,7 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, MoreHorizontal, Share } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, getKey } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,10 @@ import { DetailPostInfo } from "@/types/response";
 import useSWR, { SWRResponse, useSWRConfig } from "swr";
 import { useToken, useUser } from "@/store";
 import { fetcher } from "@/utils/fetcher";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { unstable_serialize } from "swr/infinite";
+import { copyToClipboard } from "@/utils/clipboard";
+import { useToast } from "@/hooks/use-toast";
 
 interface PostCardProps {
   post: DetailPostInfo;
@@ -50,9 +53,12 @@ export function PostCard({
   mutate,
 }: PostCardProps) {
   const [liked, setLiked] = useState(false);
+  const pathName = usePathname();
   const router = useRouter();
   const token = useToken();
   const user = useUser();
+  const { toast } = useToast();
+  const mutation = useSWRConfig();
   const isLike: SWRResponse<LikeResponse> = useSWR(
     [`/api/v1/post-likes/${post.id}/hasLiked`, token],
     ([url, token]) =>
@@ -83,6 +89,7 @@ export function PostCard({
         token: token.idToken,
       });
     } finally {
+      pathName === "/" && mutation.mutate(unstable_serialize(getKey));
       !!mutate && mutate();
     }
   };
@@ -138,7 +145,14 @@ export function PostCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Copy link</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const postUrl = `${window.location.origin}/post/${post.id}`;
+                      copyToClipboard(postUrl, toast);
+                    }}
+                  >
+                    Copy link
+                  </DropdownMenuItem>
 
                   {"id" in user && post.userId === user.id && (
                     <>
@@ -193,7 +207,15 @@ export function PostCard({
             <MessageCircle className="h-4 w-4" />
             <span>{post._count.comments}</span>
           </Button>
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => {
+              const postUrl = `${window.location.origin}/post/${post.id}`;
+              copyToClipboard(postUrl, toast);
+            }}
+          >
             <Share className="h-4 w-4" />
           </Button>
         </CardFooter>

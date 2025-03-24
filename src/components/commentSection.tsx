@@ -49,7 +49,7 @@ export function CommentSection({
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Avatar className="h-8 w-8">
-          <AvatarImage src="/placeholder-user.jpg" alt="Your avatar" />
+          <AvatarImage src="/avatar.svg" alt="Your avatar" />
           <AvatarFallback className="bg-primary text-primary-foreground">
             {"displayName" in user && !!user.displayName
               ? user.displayName.charAt(0)

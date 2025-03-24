@@ -14,7 +14,7 @@ import { useActions, useToken, useUser } from "@/store";
 import useSWR, { SWRResponse, useSWRConfig } from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { useParams } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dayjs from "dayjs";
 import { DetailPostInfo, DetailUserInfo } from "@/types/response";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +45,7 @@ export default function ProfilePage() {
     fetcher({ path: url, method: "GET", token: token.idToken }),
   );
   const follow: SWRResponse<followResponse> = useSWR(
-    [`/api/v1/users/${params.id}/isFollowing`, token],
+    [`/api/v1/follows/${params.id}/isFollowing`, token],
     ([url, token]) =>
       fetcher({ path: url, method: "GET", token: token.idToken }),
   );
@@ -66,8 +66,8 @@ export default function ProfilePage() {
       await fetcher({
         method: "POST",
         path: isFollowing
-          ? `/api/v1/users/${params.id}/unfollow`
-          : `/api/v1/users/${params.id}/follow`,
+          ? `/api/v1/follows/${params.id}/unfollow`
+          : `/api/v1/follows/${params.id}/follow`,
         token: token.idToken,
       });
     } finally {
@@ -122,12 +122,12 @@ export default function ProfilePage() {
             <div className="relative mx-4 -mt-12 flex flex-col items-start sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
               <div className="z-10 flex items-end">
                 <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-background sm:h-32 sm:w-32">
-                  {"profilePictureUrl" in user && !!user.profilePictureUrl ? (
+                  {!!User.data?.profilePictureUrl ? (
                     <Image
-                      src={user.profilePictureUrl || "/placeholder.svg"}
+                      src={User.data.profilePictureUrl || "/placeholder.svg"}
                       alt={
-                        "username" in user && !!user.username
-                          ? user.username
+                        "username" in User.data && !!User.data.username
+                          ? User.data.username
                           : "User"
                       }
                       fill
@@ -135,9 +135,10 @@ export default function ProfilePage() {
                     />
                   ) : (
                     <Avatar className="w-full h-full">
+                      <AvatarImage src="./avatar.svg" />
                       <AvatarFallback className="relative bg-primary text-primary-foreground ">
-                        {"displayName" in user && !!user.displayName
-                          ? user.displayName.charAt(0)
+                        {!!User.data?.displayName
+                          ? User.data.displayName.charAt(0)
                           : "U"}
                       </AvatarFallback>
                     </Avatar>
@@ -145,21 +146,16 @@ export default function ProfilePage() {
                 </div>
                 <div className="ml-4 pb-2">
                   <h1 className="text-2xl font-bold">
-                    {"displayName" in user && !!user.displayName
-                      ? user.displayName
-                      : "User"}
+                    {!!User.data?.displayName ? User.data.displayName : "User"}
                   </h1>
                   <p className="text-muted-foreground">
-                    @
-                    {"username" in user && !!user.username
-                      ? user.username
-                      : "user"}
+                    @{!!User.data?.username ? User.data.username : "user"}
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 flex w-full justify-end sm:mt-0 sm:w-auto">
-                {user && "id" in user && user.id !== params.id && (
+                {user?.id !== params.id && (
                   <Button
                     variant={isFollowing ? "outline" : "default"}
                     onClick={handleFollow}
@@ -167,7 +163,7 @@ export default function ProfilePage() {
                     {isFollowing ? "Following" : "Follow"}
                   </Button>
                 )}
-                {user && "id" in user && user.id === params.id && (
+                {user?.id === params.id && (
                   <Button
                     variant="outline"
                     size="icon"
@@ -183,43 +179,47 @@ export default function ProfilePage() {
 
           <div className="px-4">
             <div className="mt-4 space-y-4">
-              <p>{"bio" in user && !!user.bio ? user.bio : ""}</p>
+              <p>{!!User.data?.bio ? User.data.bio : ""}</p>
 
               <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                {"location" in user && !!user.location && (
+                {!!User.data?.location && (
                   <div className="flex items-center">
                     <MapPin className="mr-1 h-4 w-4" />
-                    {user.location}
+                    {User.data?.location}
                   </div>
                 )}
-                {"website" in user && !!user.website && (
+                {!!User.data?.website && (
                   <div className="flex items-center">
                     <LinkIcon className="mr-1 h-4 w-4" />
                     <a
-                      href={`${user.website}`}
+                      href={`${User.data.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      {user.website}
+                      {User.data.website}
                     </a>
                   </div>
                 )}
                 <div className="flex items-center">
                   <Calendar className="mr-1 h-4 w-4" />
                   Joined{" "}
-                  {"createdAt" in user && !!user.createdAt
-                    ? dayjs(user.createdAt).format("MMMM D, YYYY")
+                  {!!User.data?.createdAt
+                    ? dayjs(User.data.createdAt).format("MMMM D, YYYY")
                     : "January 1, 1970"}
                 </div>
-                {/* <div>
-                  <span className="font-bold">{userProfile.following}</span>{" "}
+                <div>
+                  <span className="font-bold">
+                    {User.data?.followingCount ?? 0}
+                  </span>{" "}
                   <span className="text-muted-foreground">Following</span>
                 </div>
                 <div>
-                  <span className="font-bold">{userProfile.followers}</span>{" "}
+                  <span className="font-bold">
+                    {User.data?.followerCount ?? 0}
+                  </span>{" "}
                   <span className="text-muted-foreground">Followers</span>
-                </div> */}
+                </div>
               </div>
             </div>
 

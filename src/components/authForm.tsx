@@ -54,7 +54,7 @@ export function AuthForm({ type }: AuthFormProps) {
       if (type === "login") {
         await actions.login(formData.email, formData.password);
 
-        if (authStatus === 'registration_required') {
+        if (authStatus === "registration_required") {
           router.push("/complete-profile");
         } else {
           router.push("/");
@@ -67,7 +67,9 @@ export function AuthForm({ type }: AuthFormProps) {
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: (error as any).message || `Failed to ${type === "login" ? "login" : "register"}`,
+        description:
+          (error as any).message ||
+          `Failed to ${type === "login" ? "login" : "register"}`,
       });
     } finally {
       setIsLoading(false);
@@ -137,15 +139,13 @@ export function AuthForm({ type }: AuthFormProps) {
           </div>
         )}
 
-        <Button
-          className="w-full"
-          type="submit"
-          disabled={isLoading}
-        >
+        <Button className="w-full" type="submit" disabled={isLoading}>
           {isLoading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          ) : type === "login" ? (
+            "Sign In"
           ) : (
-            type === "login" ? "Sign In" : "Create Account"
+            "Create Account"
           )}
         </Button>
 
@@ -164,14 +164,20 @@ export function AuthForm({ type }: AuthFormProps) {
           {type === "login" ? (
             <p>
               Don't have an account?{" "}
-              <Link href="/register" className="font-medium text-primary underline underline-offset-4">
+              <Link
+                href="/register"
+                className="font-medium text-primary underline underline-offset-4"
+              >
                 Sign up
               </Link>
             </p>
           ) : (
             <p>
               Already have an account?{" "}
-              <Link href="/login" className="font-medium text-primary underline underline-offset-4">
+              <Link
+                href="/login"
+                className="font-medium text-primary underline underline-offset-4"
+              >
                 Sign in
               </Link>
             </p>

@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/store";
+import { MediaState } from "@/types/store";
+import { uploadFile } from "@/services/uploadService";
 
 interface CreatePostProps {
-  onSubmit: (content: string, image?: File) => void;
+  onSubmit: (content: string, mediaUrl?: string) => void;
   isSubmitting?: boolean;
 }
 
@@ -22,7 +24,7 @@ export function CreatePost({
   isSubmitting = false,
 }: CreatePostProps) {
   const [content, setContent] = useState("");
-  const user = useUser();
+  const user: MediaState["user"] = useUser();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,12 +41,25 @@ export function CreatePost({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (content.trim() || image) {
-      onSubmit(content, image || undefined);
-      setContent("");
-      setImage(null);
-      setImagePreview(null);
+      try {
+        let mediaUrl = undefined;
+
+        if (image) {
+          mediaUrl = await uploadFile(image, "post-images", (progress) => {
+            console.log(`Upload progress: ${progress}%`);
+          });
+        }
+
+        await onSubmit(content, mediaUrl);
+
+        setContent("");
+        setImage(null);
+        setImagePreview(null);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
     }
   };
 
@@ -66,7 +81,10 @@ export function CreatePost({
         <CardContent className="p-4">
           <div className="flex gap-4">
             <Avatar>
-              <AvatarImage src="/placeholder-user.jpg" alt="User" />
+              <AvatarImage
+                src={user.profilePictureUrl || "/avatar.svg"}
+                alt="User"
+              />
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {"displayName" in user && !!user.displayName
                   ? user.displayName.charAt(0)
