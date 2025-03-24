@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Home, Search, User } from "lucide-react";
+import { Bell, Home, LogOut, Search, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/themeToggle";
-import { useUser } from "@/store";
+import { useActions, useAuthStatus, useUser } from "@/store";
+import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const navItems = [
   {
@@ -35,6 +45,31 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname();
   const user = useUser();
+  const authStatus = useAuthStatus();
+  const actions = useActions();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await actions.logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  // Get user's initials for avatar fallback
+  const getInitials = () => {
+    if (user.displayName) {
+      return user.displayName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase();
+    }
+    return user.username ? user.username[0].toUpperCase() : "U";
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 z-50 w-full border-t bg-background p-2 backdrop-blur-lg md:top-0 md:bottom-auto md:border-b md:border-t-0">
       <div className="mx-auto flex max-w-screen-lg items-center justify-between px-4">
@@ -86,8 +121,47 @@ export function Navbar() {
           })}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
+
+          {authStatus === "authenticated" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user.profilePictureUrl || ""}
+                      alt={user.displayName || user.username || ""}
+                    />
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    {user.displayName && (
+                      <p className="font-medium">{user.displayName}</p>
+                    )}
+                    {user.username && (
+                      <p className="text-sm text-muted-foreground">
+                        @{user.username}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
         </div>
       </div>
     </nav>
