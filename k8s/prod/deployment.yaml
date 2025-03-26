@@ -16,7 +16,7 @@ spec:
       - name: frontend
         image: gcr.io/precise-bonus-454003-f7/frontend:latest
         ports:
-        - containerPort: 4000
+        - containerPort: 4990
         env:
         - name: NEXT_PUBLIC_API_URL
           value: "http://34.58.66.193"
