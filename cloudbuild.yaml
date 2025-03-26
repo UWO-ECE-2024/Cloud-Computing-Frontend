@@ -17,8 +17,8 @@ steps:
     - |
       gcloud container clusters get-credentials frontend-dev-cluster --zone us-central1-a --project $PROJECT_ID
       kubectl set image deployment/nextjs-frontend nextjs-frontend=gcr.io/$PROJECT_ID/nextjs-frontend:$BUILD_ID
-      kubectl apply -f k8s/dev/deployment.yaml
-      kubectl apply -f k8s/dev/service.yaml
+      kubectl apply -f k8s/deployment.yaml
+      kubectl apply -f k8s/service.yaml
   env:
     - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
     - 'CLOUDSDK_CONTAINER_CLUSTER=frontend-dev-cluster'

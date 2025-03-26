@@ -1,38 +1,24 @@
-# Build stage
-FROM node:18-alpine AS builder
+# Base image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package definitions
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
-# Install dependencies
-RUN npm install -g pnpm
+# Install dependencies (including dev)
 RUN pnpm install
 
-# Copy source code
+# Copy the rest of the app
 COPY . .
 
-# Build application
-RUN pnpm build
-
-# Production stage
-FROM node:18-alpine AS runner
-
-WORKDIR /app
-
-# Set to production
-ENV NODE_ENV=production
-
-# Copy necessary files from builder
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-# Expose port
+# Expose Next.js dev port
 EXPOSE 4000
 
-# Start the application
-CMD ["node", "server.js"] 
+# Start development server
+CMD ["pnpm", "dev"]
