@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextjs-frontend
+  labels:
+    app: nextjs-frontend
+spec:
+  replicas: 1  # single pod for dev
+  selector:
+    matchLabels:
+      app: nextjs-frontend
+  template:
+    metadata:
+      labels:
+        app: nextjs-frontend
+    spec:
+      containers:
+      - name: nextjs-frontend
+        image: gcr.io/precise-bonus-454003-f7/nextjs-frontend:$BUILD_ID
+        ports:
+        - containerPort: 4000
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://104.197.35.196"
