@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nextjs-frontend
-        image: gcr.io/precise-bonus-454003-f7/nextjs-frontend:latest
+        image: gcr.io/precise-bonus-454003-f7/nextjs-frontend:$BUILD_ID
         ports:
         - containerPort: 4000
         env:
