@@ -25,7 +25,7 @@ RUN npm install -g pnpm && pnpm install --prod
 # Copy build output
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/next.config.js ./next.config.js
+COPY --from=builder /app/next.config.ts ./next.config.ts
 
 EXPOSE 4000
 
