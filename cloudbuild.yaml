@@ -1,5 +1,5 @@
 steps:
-# Step 1: Build Docker image with BUILD_ID as tag
+# Step 1: Build the Docker image with BUILD_ID as tag
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/nextjs-frontend:$BUILD_ID', '.']
   env:
@@ -9,17 +9,16 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/nextjs-frontend:$BUILD_ID']
 
-# Step 3: Deploy using kubectl set-image only (no apply)
+# Step 3: Deploy to frontend-dev-cluster
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: 'bash'
   args:
     - '-c'
     - |
-      gcloud container clusters get-credentials frontend-dev-cluster \
-        --zone us-central1-a \
-        --project $PROJECT_ID
-      kubectl set image deployment/nextjs-frontend \
-        nextjs-frontend=gcr.io/$PROJECT_ID/nextjs-frontend:$BUILD_ID
+      gcloud container clusters get-credentials frontend-dev-cluster --zone us-central1-a --project $PROJECT_ID
+      kubectl set image deployment/nextjs-frontend nextjs-frontend=gcr.io/$PROJECT_ID/nextjs-frontend:$BUILD_ID
+      kubectl apply -f k8s/dev/deployment.yaml
+      kubectl apply -f k8s/dev/service.yaml
   env:
     - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
     - 'CLOUDSDK_CONTAINER_CLUSTER=frontend-dev-cluster'
