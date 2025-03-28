@@ -21,4 +21,4 @@ spec:
         - containerPort: 4000
         env:
         - name: NEXT_PUBLIC_API_URL
-          value: "http://104.197.35.196"
+          value: "http://35.232.162.120"
