@@ -4,6 +4,7 @@ metadata:
   name: nextjs-frontend-service
 spec:
   type: LoadBalancer
+  loadBalancerIP: 34.27.207.211
   ports:
   - port: 80
     targetPort: 4000
