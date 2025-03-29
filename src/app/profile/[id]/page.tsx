@@ -11,7 +11,7 @@ import { PostCard } from "@/components/postCard";
 import { Navbar } from "@/components/navbar";
 import { EditProfileDialog } from "@/components/editProfileDialog";
 import { useActions, useToken, useUser } from "@/store";
-import useSWR, { SWRResponse, useSWRConfig } from "swr";
+import useSWR, { SWRResponse } from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { useParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,7 +39,6 @@ export default function ProfilePage() {
   const user = useUser();
   const { toast } = useToast();
   const updateUserInfo = useActions().updateUserInfo;
-  const { mutate } = useSWRConfig();
   const token = useToken();
   const User = useSWR([`/api/v1/users/${params.id}`, token], ([url, token]) =>
     fetcher({ path: url, method: "GET", token: token.idToken }),

@@ -30,8 +30,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DetailUserInfo } from "@/types/response";
 import { useActions, useToken, useUser } from "@/store";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/uploadService";
