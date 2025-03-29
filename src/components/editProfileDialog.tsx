@@ -30,8 +30,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DetailUserInfo } from "@/types/response";
 import { useActions, useToken, useUser } from "@/store";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/utils/fetcher";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/uploadService";
@@ -83,12 +81,14 @@ interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profile: DetailUserInfo;
+  mutate?: () => void;
 }
 
 export function EditProfileDialog({
   open,
   onOpenChange,
   profile,
+  mutate,
 }: EditProfileDialogProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -114,7 +114,6 @@ export function EditProfileDialog({
     },
   });
 
-  const { mutate } = useSWRConfig();
   const CURRENT_USER_KEY = "/api/v1/users/me";
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,7 +192,7 @@ export function EditProfileDialog({
         title: "Success",
         description: "Your info update has been applied",
       });
-      mutate(CURRENT_USER_KEY);
+      !!mutate && mutate();
     } catch (e) {
       toast({
         variant: "destructive",
