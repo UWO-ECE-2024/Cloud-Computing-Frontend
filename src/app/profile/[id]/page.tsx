@@ -71,7 +71,7 @@ export default function ProfilePage() {
         token: token.idToken,
       });
     } finally {
-      mutate(`/api/v1/users/${params.id}`);
+      User.mutate();
     }
   };
 
@@ -304,6 +304,7 @@ export default function ProfilePage() {
             onOpenChange={setIsEditProfileOpen}
             profile={user as DetailUserInfo}
             // onSave={handleProfileUpdate}
+            mutate={User.mutate}
           />
         </motion.div>
       </main>
