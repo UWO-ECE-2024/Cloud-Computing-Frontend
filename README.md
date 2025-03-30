@@ -17,8 +17,7 @@
 
 This social media application is a modern web platform built with Next.js. It provides features like user authentication, profile management, posting content, commenting, and interactions (likes, follows).
 
-![architecture](./public/architecture-diagram.svg)
-<img src="./public/architecture-diagram.svg" />
+![architecture](./public/images/architecture-diagram.png)
 
 ## Technology Stack
 
