@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8f9fa" rx="10" ry="10" />
+  
+  <!-- Title -->
+  <text x="600" y="50" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">Social Media Application Architecture</text>
+
+  <!-- Frontend Section -->
+  <rect x="50" y="100" width="1100" height="650" fill="#e9ecef" stroke="#adb5bd" stroke-width="2" rx="10" ry="10" />
+  <text x="100" y="130" font-family="Arial" font-size="18" font-weight="bold">Frontend (Next.js)</text>
+
+  <!-- Client Components -->
+  <rect x="80" y="150" width="320" height="580" fill="#dee2e6" stroke="#adb5bd" stroke-width="2" rx="8" ry="8" />
+  <text x="240" y="175" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">Client Components</text>
+  
+  <!-- Pages -->
+  <rect x="100" y="190" width="280" height="160" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="240" y="210" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Pages</text>
+  <text x="120" y="235" font-family="Arial" font-size="12">• Home (/src/app/page.tsx)</text>
+  <text x="120" y="255" font-family="Arial" font-size="12">• Auth (/login, /register, /signup)</text>
+  <text x="120" y="275" font-family="Arial" font-size="12">• Profile (/profile/[id])</text>
+  <text x="120" y="295" font-family="Arial" font-size="12">• Post (/post/[id])</text>
+  <text x="120" y="315" font-family="Arial" font-size="12">• Complete Profile (/complete-profile)</text>
+  
+  <!-- Components -->
+  <rect x="100" y="360" width="280" height="170" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="240" y="380" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Components</text>
+  <text x="120" y="405" font-family="Arial" font-size="12">• UI Components (shadcn/ui)</text>
+  <text x="120" y="425" font-family="Arial" font-size="12">• Navbar</text>
+  <text x="120" y="445" font-family="Arial" font-size="12">• PostCard</text>
+  <text x="120" y="465" font-family="Arial" font-size="12">• CommentSection</text>
+  <text x="120" y="485" font-family="Arial" font-size="12">• CreatePost</text>
+  <text x="120" y="505" font-family="Arial" font-size="12">• AuthForms</text>
+
+  <!-- Auth -->
+  <rect x="100" y="540" width="280" height="100" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="240" y="560" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Auth Components</text>
+  <text x="120" y="585" font-family="Arial" font-size="12">• AuthGuard</text>
+  <text x="120" y="605" font-family="Arial" font-size="12">• AuthStateRedirects</text>
+  <text x="120" y="625" font-family="Arial" font-size="12">• GoogleSignInButton</text>
+
+  <!-- State Management -->
+  <rect x="430" y="150" width="320" height="580" fill="#dee2e6" stroke="#adb5bd" stroke-width="2" rx="8" ry="8" />
+  <text x="590" y="175" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">State Management</text>
+  
+  <!-- Store -->
+  <rect x="450" y="190" width="280" height="130" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="590" y="210" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">MediaStore (Zustand)</text>
+  <text x="470" y="235" font-family="Arial" font-size="12">• User State</text>
+  <text x="470" y="255" font-family="Arial" font-size="12">• Auth State</text>
+  <text x="470" y="275" font-family="Arial" font-size="12">• Token Management</text>
+  <text x="470" y="295" font-family="Arial" font-size="12">• Auth Actions</text>
+  
+  <!-- Providers -->
+  <rect x="450" y="330" width="280" height="110" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="590" y="350" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Providers</text>
+  <text x="470" y="375" font-family="Arial" font-size="12">• MediaStoreProvider</text>
+  <text x="470" y="395" font-family="Arial" font-size="12">• ThemeProvider</text>
+  <text x="470" y="415" font-family="Arial" font-size="12">• SWRConfig</text>
+  
+  <!-- Hooks -->
+  <rect x="450" y="450" width="280" height="110" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="590" y="470" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Hooks</text>
+  <text x="470" y="495" font-family="Arial" font-size="12">• useToast</text>
+  <text x="470" y="515" font-family="Arial" font-size="12">• useMediaStore</text>
+  <text x="470" y="535" font-family="Arial" font-size="12">• useUser, useToken, useActions</text>
+
+  <!-- Types -->
+  <rect x="450" y="570" width="280" height="110" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="590" y="590" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Types</text>
+  <text x="470" y="615" font-family="Arial" font-size="12">• Response Types (User, Post, Comment)</text>
+  <text x="470" y="635" font-family="Arial" font-size="12">• Store Types (MediaStore, MediaState)</text>
+  <text x="470" y="655" font-family="Arial" font-size="12">• Request Types</text>
+
+  <!-- Services & Data -->
+  <rect x="780" y="150" width="350" height="580" fill="#dee2e6" stroke="#adb5bd" stroke-width="2" rx="8" ry="8" />
+  <text x="955" y="175" font-family="Arial" font-size="16" text-anchor="middle" font-weight="bold">Services & Data Fetching</text>
+  
+  <!-- Firebase -->
+  <rect x="800" y="190" width="310" height="130" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="955" y="210" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Firebase</text>
+  <text x="820" y="235" font-family="Arial" font-size="12">• Authentication</text>
+  <text x="820" y="255" font-family="Arial" font-size="12">• Storage</text>
+  <text x="820" y="275" font-family="Arial" font-size="12">• Firebase Config</text>
+  <text x="820" y="295" font-family="Arial" font-size="12">• Google Auth Provider</text>
+  
+  <!-- Auth Service -->
+  <rect x="800" y="330" width="310" height="100" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="955" y="350" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Auth Services</text>
+  <text x="820" y="375" font-family="Arial" font-size="12">• Login/Register/Logout</text>
+  <text x="820" y="395" font-family="Arial" font-size="12">• Google Sign In</text>
+  <text x="820" y="415" font-family="Arial" font-size="12">• Complete Registration</text>
+  
+  <!-- Upload Service -->
+  <rect x="800" y="440" width="310" height="80" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="955" y="460" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Upload Service</text>
+  <text x="820" y="485" font-family="Arial" font-size="12">• File Upload to Firebase Storage</text>
+  <text x="820" y="505" font-family="Arial" font-size="12">• Upload Progress Tracking</text>
+  
+  <!-- API Fetching -->
+  <rect x="800" y="530" width="310" height="150" fill="#ffffff" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="955" y="550" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">API Fetching (SWR)</text>
+  <text x="820" y="575" font-family="Arial" font-size="12">• Posts API</text>
+  <text x="820" y="595" font-family="Arial" font-size="12">• Comments API</text>
+  <text x="820" y="615" font-family="Arial" font-size="12">• User Profile API</text>
+  <text x="820" y="635" font-family="Arial" font-size="12">• Like/Unlike API</text>
+  <text x="820" y="655" font-family="Arial" font-size="12">• Follow/Unfollow API</text>
+
+  <!-- Arrows and Connections -->
+  <!-- Client to State -->
+  <path d="M400 300 L430 300" stroke="#495057" stroke-width="2" fill="none" />
+  <polygon points="428,296 438,300 428,304" fill="#495057" />
+  
+  <!-- State to Services -->
+  <path d="M750 300 L780 300" stroke="#495057" stroke-width="2" fill="none" />
+  <polygon points="778,296 788,300 778,304" fill="#495057" />
+  
+  <!-- Services to Backend -->
+  <path d="M955 730 L955 750" stroke="#495057" stroke-width="2" fill="none" />
+  <polygon points="951,748 955,758 959,748" fill="#495057" />
+  
+  <!-- Backend -->
+  <rect x="780" y="750" width="350" height="40" fill="#ced4da" stroke="#adb5bd" stroke-width="2" rx="6" ry="6" />
+  <text x="955" y="775" font-family="Arial" font-size="14" text-anchor="middle" font-weight="bold">Backend API (External)</text>
+</svg>
