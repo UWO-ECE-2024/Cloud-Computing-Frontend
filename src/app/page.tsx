@@ -17,6 +17,7 @@ import useSWRInfinite, {
 import { MediaState } from "@/types/store";
 import { DetailPostInfo } from "@/types/response";
 import { getKey } from "@/lib/utils";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export interface PageResponse {
   message: string;
@@ -68,6 +69,14 @@ export default function Home() {
     }
   };
 
+  const loadMore = () => {
+    if (!post_page.isValidating) {
+      post_page.setSize(post_page.size + 1);
+    }
+  };
+
+  const observerRef = useInfiniteScroll(loadMore);
+
   const handleComment = (id: string) => {
     router.push(`/post/${id}`);
   };
@@ -106,6 +115,8 @@ export default function Home() {
               )
             )}
           </motion.div>
+          <div ref={observerRef} className="h-1" />
+          {post_page.isValidating && <div>Loading more...</div>}
         </div>
       </main>
     </>
